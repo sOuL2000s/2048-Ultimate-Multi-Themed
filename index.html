@@ -99,6 +99,66 @@
             --tile-super-bg: #002e00;
         }
 
+        /* Ocean theme */
+        body[data-theme="ocean"] {
+            --bg-color: #e0f2f7; /* Light blue */
+            --header-bg: #3498db; /* Ocean blue */
+            --text-color: #2c3e50; /* Darker text */
+            --score-bg: #aed6f1; /* Lighter blue */
+            --score-text: #fefefe;
+            --button-bg: #3498db;
+            --button-text: #fefefe;
+            --game-board-bg: #aed6f1;
+            --tile-bg-empty: #d4eaf7; /* Very light blue */
+            --tile-text-light: #fefefe;
+            --tile-text-dark: #2c3e50;
+            --game-message-bg: rgba(224, 242, 247, 0.73);
+            --game-message-text: #34495e;
+
+            --tile-2-bg: #bbdefb; /* Lightest blue */
+            --tile-4-bg: #90caf9;
+            --tile-8-bg: #64b5f6;
+            --tile-16-bg: #42a5f5;
+            --tile-32-bg: #2196f3;
+            --tile-64-bg: #1e88e5;
+            --tile-128-bg: #1976d2;
+            --tile-256-bg: #1565c0;
+            --tile-512-bg: #0d47a1;
+            --tile-1024-bg: #002e5b; /* Deep blue */
+            --tile-2048-bg: #002e5b;
+            --tile-super-bg: #011d33; /* Very dark blue */
+        }
+
+        /* Sunset theme */
+        body[data-theme="sunset"] {
+            --bg-color: #fce4ec; /* Light pink */
+            --header-bg: #e91e63; /* Deep pink */
+            --text-color: #880e4f; /* Darker pink */
+            --score-bg: #f8bbd0; /* Soft pink */
+            --score-text: #fefefe;
+            --button-bg: #e91e63;
+            --button-text: #fefefe;
+            --game-board-bg: #f8bbd0;
+            --tile-bg-empty: #fccde2; /* Lighter pink */
+            --tile-text-light: #fefefe;
+            --tile-text-dark: #880e4f;
+            --game-message-bg: rgba(252, 228, 236, 0.73);
+            --game-message-text: #c2185b;
+
+            --tile-2-bg: #f8bbd0;
+            --tile-4-bg: #f48fb1;
+            --tile-8-bg: #f06292;
+            --tile-16-bg: #ec407a;
+            --tile-32-bg: #e91e63;
+            --tile-64-bg: #d81b60;
+            --tile-128-bg: #c2185b;
+            --tile-256-bg: #ad1457;
+            --tile-512-bg: #880e4f;
+            --tile-1024-bg: #5b0f42; /* Darker red-purple */
+            --tile-2048-bg: #5b0f42;
+            --tile-super-bg: #310a24; /* Very dark purple */
+        }
+
         /* General styles */
         * {
             box-sizing: border-box;
@@ -196,12 +256,22 @@
         }
 
         button:hover {
-            background-color: #a38b74; /* A slightly lighter version of button-bg */
+            filter: brightness(1.1); /* A slightly lighter version of button-bg */
             transform: translateY(-1px);
         }
 
         button:active {
             transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .game-buttons {
+            display: flex;
+            gap: 10px;
         }
 
         .theme-selector {
@@ -270,7 +340,7 @@
             font-size: 2.5em;
             font-weight: bold;
             color: var(--tile-text-dark);
-            transition: transform 0.15s ease-in-out, background-color 0.1s ease-in-out, color 0.1s ease-in-out;
+            transition: transform 0.15s ease-in-out, background-color 0.1s ease-in-out, color 0.1s ease-in-out, left 0.15s ease-in-out, top 0.15s ease-in-out;
             z-index: 1;
         }
 
@@ -325,7 +395,6 @@
         .tile[data-value="1024"], .tile[data-value="2048"] { font-size: 1.8em; }
         .tile[data-value] {
             /* General font size adjustment for numbers with 4+ digits */
-            --value-length: attr(data-value length); /* Not standard, but illustrative */
             /* If JS can add a class or style, that's more reliable */
         }
         .tile[data-value^="4096"], .tile[data-value^="8192"], .tile[data-value^="16384"], .tile[data-value^="32768"], .tile[data-value^="65536"] {
@@ -377,6 +446,10 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+            .game-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
             .theme-selector {
                 justify-content: center;
                 gap: 5px;
@@ -421,12 +494,17 @@
         </header>
 
         <div class="controls">
-            <button id="restart-button">New Game</button>
+            <div class="game-buttons">
+                <button id="restart-button">New Game</button>
+                <button id="undo-button" disabled>Undo</button>
+            </div>
             <div class="theme-selector">
                 <span>Theme:</span>
                 <button data-theme="default" class="theme-button active">Default</button>
                 <button data-theme="dark" class="theme-button">Dark</button>
                 <button data-theme="forest" class="theme-button">Forest</button>
+                <button data-theme="ocean" class="theme-button">Ocean</button>
+                <button data-theme="sunset" class="theme-button">Sunset</button>
             </div>
         </div>
 
@@ -448,6 +526,7 @@
     <script>
         const BOARD_SIZE = 4;
         const TILE_GAP = 10; // Must match CSS gap value
+        const UNDO_STACK_LIMIT = 10; // Maximum number of moves to store for undo
 
         let board = [];
         let score = 0;
@@ -460,6 +539,8 @@
         let touchEndX = 0;
         let touchEndY = 0;
 
+        let undoStack = []; // Stack to store previous game states
+
         // DOM Elements
         const scoreElement = document.getElementById('score');
         const bestScoreElement = document.getElementById('best-score');
@@ -467,6 +548,7 @@
         const gameMessageElement = document.getElementById('game-message');
         const messageTextElement = document.getElementById('message-text');
         const restartButton = document.getElementById('restart-button');
+        const undoButton = document.getElementById('undo-button'); // New undo button
         const tryAgainButton = document.getElementById('try-again-button');
         const themeButtons = document.querySelectorAll('.theme-button');
         const bodyElement = document.body;
@@ -478,7 +560,9 @@
                 board: board,
                 score: score,
                 bestScore: bestScore,
-                isGameWon: isGameWon
+                isGameWon: isGameWon,
+                isGameOver: isGameOver, // Save game over state
+                undoStack: undoStack // Save the undo stack
             }));
         }
 
@@ -489,15 +573,28 @@
                 board = data.board;
                 score = data.score;
                 bestScore = data.bestScore;
-                isGameWon = data.isGameWon; // Important for "Keep Playing" state
+                isGameWon = data.isGameWon;
+                isGameOver = data.isGameOver; // Load game over state
+                undoStack = data.undoStack || []; // Load undo stack, default to empty array
+
                 updateScore(0); // Update score display without adding to score
                 updateBestScore();
                 renderBoard();
+                
+                // Restore game message state if applicable
                 if (isGameWon && !isGameOver) {
                     gameMessageElement.classList.remove('hidden');
                     messageTextElement.textContent = 'You Win!';
                     tryAgainButton.textContent = 'Keep Playing';
+                } else if (isGameOver) {
+                    gameMessageElement.classList.remove('hidden');
+                    messageTextElement.textContent = 'Game Over!';
+                    tryAgainButton.textContent = 'Try Again';
+                } else {
+                    gameMessageElement.classList.add('hidden');
                 }
+
+                updateUndoButtonState(); // Update undo button state after loading
                 return true;
             }
             return false;
@@ -528,6 +625,58 @@
             }
         }
 
+        // --- Undo Stack Management ---
+        function pushToUndoStack() {
+            if (undoStack.length >= UNDO_STACK_LIMIT) {
+                undoStack.shift(); // Remove oldest state if stack is full
+            }
+            undoStack.push({
+                board: JSON.parse(JSON.stringify(board)), // Deep copy board
+                score: score,
+                isGameWon: isGameWon,
+                isGameOver: isGameOver
+            });
+            updateUndoButtonState();
+            saveGame(); // Save game state including undo stack
+        }
+
+        function undoMove() {
+            if (undoStack.length > 0) {
+                const prevState = undoStack.pop();
+                board = prevState.board;
+                score = prevState.score;
+                isGameWon = prevState.isGameWon;
+                isGameOver = prevState.isGameOver;
+
+                // Update UI elements
+                scoreElement.textContent = score;
+                // Best score is not undone, it's a persistent high score
+                renderBoard();
+                
+                // Restore game message state if applicable
+                if (isGameWon && !isGameOver) {
+                    gameMessageElement.classList.remove('hidden');
+                    messageTextElement.textContent = 'You Win!';
+                    tryAgainButton.textContent = 'Keep Playing';
+                } else if (isGameOver) {
+                    gameMessageElement.classList.remove('hidden');
+                    messageTextElement.textContent = 'Game Over!';
+                    tryAgainButton.textContent = 'Try Again';
+                } else {
+                    gameMessageElement.classList.add('hidden');
+                }
+
+                updateUndoButtonState();
+                saveGame(); // Save the new (undone) state
+            }
+        }
+
+        function updateUndoButtonState() {
+            // Disable if no moves to undo, or if game is over (user should restart)
+            undoButton.disabled = undoStack.length === 0 || isGameOver; 
+        }
+
+
         // --- UI Updates ---
 
         function updateScore(points) {
@@ -548,12 +697,12 @@
             return { x, y, tileSize };
         }
 
-        function renderBoard() {
+        function renderBoard(newTileCoords = null) {
             // Remove existing tiles
             const existingTiles = gameBoardElement.querySelectorAll('.tile');
             existingTiles.forEach(tile => tile.remove());
 
-            // Clear previous placeholder
+            // Clear previous placeholder and redraw
             gameBoardElement.innerHTML = '';
             for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
                 const placeholder = document.createElement('div');
@@ -569,6 +718,8 @@
                         const tileElement = document.createElement('div');
                         tileElement.classList.add('tile');
                         tileElement.dataset.value = value;
+                        tileElement.dataset.row = r; // Store row for new tile identification
+                        tileElement.dataset.col = c; // Store col for new tile identification
                         tileElement.textContent = value;
                         tileElement.style.zIndex = '1';
 
@@ -579,6 +730,7 @@
                             tileElement.classList.add('tile-super'); // For values > 2048
                         }
 
+                        // Set position
                         const { x, y, tileSize } = getTilePosition(r, c);
                         tileElement.style.left = `${x}px`;
                         tileElement.style.top = `${y}px`;
@@ -589,74 +741,19 @@
                     }
                 }
             }
-        }
-
-        function renderAnimatedBoard(animations) {
-            // Remove existing tiles that are not part of animations
-            const existingTiles = gameBoardElement.querySelectorAll('.tile');
-            existingTiles.forEach(tile => {
-                if (!animations.some(anim => anim.fromRow === tile.dataset.row && anim.fromCol === tile.dataset.col)) {
-                    tile.remove();
+            
+            // If newTileCoords is provided, find that specific tile and add 'tile-new' class
+            if (newTileCoords) {
+                const newTileElement = gameBoardElement.querySelector(
+                    `.tile[data-row="${newTileCoords.r}"][data-col="${newTileCoords.c}"][data-value="${newTileCoords.value}"]`
+                );
+                if (newTileElement) {
+                    newTileElement.classList.add('tile-new');
+                    // Remove the class after the animation duration to allow subsequent transitions
+                    setTimeout(() => newTileElement.classList.remove('tile-new'), 200); // Match animation duration
                 }
-            });
-
-            // Clear previous placeholder
-            gameBoardElement.innerHTML = '';
-            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-                const placeholder = document.createElement('div');
-                placeholder.classList.add('tile-placeholder');
-                gameBoardElement.appendChild(placeholder);
             }
-
-            const newTileElements = [];
-            animations.forEach(anim => {
-                const tileElement = document.createElement('div');
-                tileElement.classList.add('tile');
-                tileElement.dataset.value = anim.value;
-                tileElement.dataset.row = anim.toRow; // Current position
-                tileElement.dataset.col = anim.toCol; // Current position
-                tileElement.textContent = anim.value;
-
-                if (anim.value <= 2048) {
-                    tileElement.classList.add(`tile-${anim.value}`);
-                } else {
-                    tileElement.classList.add('tile-super');
-                }
-
-                // Initial position for animation
-                const fromPos = getTilePosition(anim.fromRow, anim.fromCol);
-                tileElement.style.left = `${fromPos.x}px`;
-                tileElement.style.top = `${fromPos.y}px`;
-                tileElement.style.width = `${fromPos.tileSize}px`;
-                tileElement.style.height = `${fromPos.tileSize}px`;
-
-                if (anim.type === 'new') {
-                    tileElement.classList.add('tile-new');
-                    tileElement.style.zIndex = '3'; // New tiles appear on top
-                } else if (anim.type === 'merge') {
-                    tileElement.classList.add('tile-merged');
-                    tileElement.style.zIndex = '2'; // Merged tiles animate above others
-                } else {
-                    tileElement.style.zIndex = '1';
-                }
-                
-                gameBoardElement.appendChild(tileElement);
-                newTileElements.push({ element: tileElement, anim: anim });
-            });
-
-            // Trigger reflow to ensure initial styles are applied before transition
-            gameBoardElement.offsetWidth; 
-
-            // Apply final positions for transition
-            newTileElements.forEach(({ element, anim }) => {
-                const toPos = getTilePosition(anim.toRow, anim.toCol);
-                element.style.left = `${toPos.x}px`;
-                element.style.top = `${toPos.y}px`;
-                element.style.width = `${toPos.tileSize}px`;
-                element.style.height = `${toPos.tileSize}px`;
-            });
         }
-
 
         // --- Game Logic ---
 
@@ -668,13 +765,26 @@
             gameMessageElement.classList.add('hidden');
             messageTextElement.textContent = '';
             tryAgainButton.textContent = 'Keep Playing';
+            undoStack = []; // Clear undo stack for a new game
 
             updateScore(0); // Reset score display
             loadBestScore();
             
-            addRandomTile();
-            addRandomTile();
-            renderBoard();
+            const firstTile = addRandomTile();
+            const secondTile = addRandomTile();
+            // Pass new tile coordinates to renderBoard for animation
+            renderBoard(); 
+            // Apply new animations after initial render
+            if (firstTile) {
+                const tileElement = gameBoardElement.querySelector(`.tile[data-row="${firstTile.r}"][data-col="${firstTile.c}"][data-value="${firstTile.value}"]`);
+                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 200); }
+            }
+            if (secondTile) {
+                const tileElement = gameBoardElement.querySelector(`.tile[data-row="${secondTile.r}"][data-col="${secondTile.c}"][data-value="${secondTile.value}"]`);
+                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 200); }
+            }
+
+            updateUndoButtonState(); // Update undo button state after init
             saveGame(); // Save initial state
         }
 
@@ -692,7 +802,7 @@
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
                 const { r, c } = emptyCells[randomIndex];
                 board[r][c] = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
-                return { r, c, value: board[r][c], type: 'new' }; // Return new tile info for animation
+                return { r, c, value: board[r][c] }; // Return new tile info
             }
             return null;
         }
@@ -710,18 +820,9 @@
         function slideAndMerge(line) {
             let moved = false;
             let mergedPoints = 0;
-            let animations = []; // { from: {r,c}, to: {r,c}, value: val, type: 'move'/'merge' }
 
-            // 1. Filter out zeros (compress) and collect initial tile positions
+            // 1. Filter out zeros and compress
             const filteredLine = line.filter(val => val !== 0);
-            const initialPositions = [];
-            let currentIdx = 0;
-            for(let i=0; i<line.length; i++) {
-                if(line[i] !== 0) {
-                    initialPositions.push({ val: line[i], originalIdx: i, newIdx: currentIdx });
-                    currentIdx++;
-                }
-            }
 
             // 2. Merge tiles
             let newLine = Array(BOARD_SIZE).fill(0);
@@ -733,28 +834,13 @@
                     mergedPoints += mergedValue;
                     i++; // Skip the next tile as it's merged
                     moved = true; // A merge implies a move
-                    
-                    // Animation data for merge
-                    // Need to map original indices to current line for 'from' positions
-                    const tile1Idx = initialPositions.findIndex(pos => pos.val === filteredLine[i-1] && pos.newIdx === i-1);
-                    const tile2Idx = initialPositions.findIndex(pos => pos.val === filteredLine[i] && pos.newIdx === i);
-                    
-                    if (tile1Idx !== -1 && tile2Idx !== -1) {
-                         animations.push({
-                            fromIdx1: initialPositions[tile1Idx].originalIdx,
-                            fromIdx2: initialPositions[tile2Idx].originalIdx,
-                            toIdx: k,
-                            value: mergedValue,
-                            type: 'merge'
-                        });
-                    }
                 } else {
                     newLine[k] = filteredLine[i];
                 }
                 k++;
             }
             
-            // 3. Check for moves without merges
+            // 3. Check for moves without merges (if numbers simply shifted positions)
             if (!moved) {
                 for (let i = 0; i < line.length; i++) {
                     if (line[i] !== newLine[i]) {
@@ -764,47 +850,42 @@
                 }
             }
 
-            return { newLine, moved, mergedPoints, animations };
+            return { newLine, moved, mergedPoints };
         }
 
 
         function moveTiles(direction) {
-            if (isGameOver || (isGameWon && tryAgainButton.textContent === 'Keep Playing')) return; // Prevent moves after game over/win message shown
+            // Block moves if game is over, or if game is won AND the "You Win!" message is visible
+            if (isGameOver || (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden'))) {
+                return;
+            }
+
+            // Save current state BEFORE making a move
+            pushToUndoStack();
 
             let hasMoved = false;
             let totalMergedPoints = 0;
-            let tileAnimations = [];
-            const oldBoard = JSON.parse(JSON.stringify(board)); // Deep copy
+            const oldBoard = JSON.parse(JSON.stringify(board)); // Deep copy to detect actual moves
 
             for (let i = 0; i < BOARD_SIZE; i++) {
                 let line;
-                let originalLine = [];
-                let mapCoords = (idx) => ({ r: i, c: idx }); // Default for horizontal
 
                 switch (direction) {
                     case 'left':
                         line = board[i];
-                        originalLine = [...line];
-                        mapCoords = (idx) => ({ r: i, c: idx });
                         break;
                     case 'right':
                         line = board[i].slice().reverse();
-                        originalLine = [...board[i]]; // Store original for comparison
-                        mapCoords = (idx) => ({ r: i, c: BOARD_SIZE - 1 - idx });
                         break;
                     case 'up':
                         line = getColumn(i);
-                        originalLine = [...getColumn(i)];
-                        mapCoords = (idx) => ({ r: idx, c: i });
                         break;
                     case 'down':
                         line = getColumn(i).slice().reverse();
-                        originalLine = [...getColumn(i)];
-                        mapCoords = (idx) => ({ r: BOARD_SIZE - 1 - idx, c: i });
                         break;
                 }
 
-                const { newLine, moved, mergedPoints, animations: lineAnimations } = slideAndMerge(line);
+                const { newLine, moved, mergedPoints } = slideAndMerge(line);
 
                 if (moved) {
                     hasMoved = true;
@@ -825,96 +906,26 @@
                             setColumn(i, newLine.slice().reverse());
                             break;
                     }
-                    
-                    // Add animations for current line
-                    // Calculate 'from' and 'to' coordinates based on direction and original/new board state
-                    for (let r = 0; r < BOARD_SIZE; r++) {
-                        for (let c = 0; c < BOARD_SIZE; c++) {
-                            const oldValue = oldBoard[r][c];
-                            const newValue = board[r][c];
-                            if (oldValue !== 0) { // If there was a tile
-                                if (newValue !== oldValue) { // If it moved or merged
-                                     // Find its new position (or where it merged into)
-                                     let found = false;
-                                     if(newValue !== 0) {
-                                        // Check if this tile value is present at a new location
-                                        // This is a simplified animation where we don't track individual tile IDs,
-                                        // just infer movement from old to new board state.
-                                        // A more robust solution would involve tracking tile IDs.
-                                        // For now, we'll generate movement for existing tiles if their position changed.
-                                        // The 'merged' animations from slideAndMerge handle merge specific visual cues.
-                                     }
-
-                                     // Simple check for position change for non-merged tiles
-                                     const currentBoardTile = board[r][c];
-                                     const oldBoardTile = oldBoard[r][c];
-                                     if (currentBoardTile !== oldBoardTile || (currentBoardTile === 0 && oldBoardTile !== 0)) { // Tile moved or disappeared (merged)
-                                        // We'll rely on the existing 'board' to render the final state
-                                        // and use simpler move animations for everything else.
-                                        // A complex animation system would track each tile's unique ID.
-                                        // For this implementation, we will simplify: the `renderAnimatedBoard` will primarily redraw based on the new `board` state,
-                                        // and `tileAnimations` will provide specific merge/new tile effects.
-                                     }
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
             if (hasMoved) {
                 updateScore(totalMergedPoints);
-                const newTileAnim = addRandomTile();
-                if (newTileAnim) {
-                    // console.log("New Tile:", newTileAnim);
-                }
-
-                // Collect all current tiles for rendering (including new ones)
-                const currentTileAnimations = [];
-                for(let r=0; r<BOARD_SIZE; r++) {
-                    for(let c=0; c<BOARD_SIZE; c++) {
-                        if(board[r][c] !== 0) {
-                            currentTileAnimations.push({
-                                fromRow: r, // For simplicity, assume same 'from' and 'to' for non-animated tiles
-                                fromCol: c,
-                                toRow: r,
-                                toCol: c,
-                                value: board[r][c],
-                                type: 'static'
-                            });
-                        }
-                    }
-                }
-
-                // Add the new tile animation
-                if (newTileAnim) {
-                    currentTileAnimations.push({
-                        fromRow: newTileAnim.r,
-                        fromCol: newTileAnim.c,
-                        toRow: newTileAnim.r,
-                        toCol: newTileAnim.c,
-                        value: newTileAnim.value,
-                        type: 'new'
-                    });
-                }
+                const newTile = addRandomTile();
                 
-                // For merging animations, we need to carefully track old positions.
-                // This simplified animation system will render current board state after a small delay.
-                renderBoard(); // Render immediately for non-animated tiles
-
-                // A proper animation system would calculate start/end positions for *all* tiles.
-                // For simplicity and to meet the "zero human effort" with a single file,
-                // we'll just re-render the final state. Animations are handled by CSS `transition`
-                // on `left`/`top` properties, which get updated during `renderBoard`.
-                // The `tile-new` and `tile-merged` classes trigger their respective keyframe animations.
-                
-                // Set a timeout to allow CSS transitions to complete
+                // Trigger re-render after a short delay to allow CSS transitions to play out
                 setTimeout(() => {
+                    renderBoard(newTile); // Render the board and apply 'tile-new' to the new tile
+                    // Check game status and save after animations
                     checkGameStatus();
                     saveGame();
-                }, 160); // Match or slightly exceed CSS transition duration
+                }, 160); // Match CSS transition duration for position changes
             } else {
-                 checkGameStatus(); // Still check status if no move happened (e.g., stuck)
+                // If no tiles moved, pop the last state from undo stack as no valid move occurred
+                undoStack.pop();
+                updateUndoButtonState();
+                saveGame();
+                checkGameStatus(); // Still check status if no move happened (e.g., stuck)
             }
         }
 
@@ -961,6 +972,7 @@
                 showMessage('Game Over!');
                 tryAgainButton.textContent = 'Try Again';
                 saveGame();
+                updateUndoButtonState(); // Disable undo button if game over
             }
         }
 
@@ -972,8 +984,18 @@
         // --- Event Listeners ---
 
         function handleKeyPress(event) {
-            if (isGameOver || (isGameWon && tryAgainButton.textContent === 'Keep Playing' && event.key !== 'Enter')) return;
-            
+            // If message is visible and it's a win message (not game over), block controls except 'Enter' for 'Keep Playing'
+            if (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden')) {
+                if (event.key === 'Enter') {
+                    gameMessageElement.classList.add('hidden');
+                    return; // Consume Enter, don't process as move
+                }
+                event.preventDefault(); // Block other keys from moving
+                return;
+            }
+            // Block moves if game is truly over and message is visible
+            if (isGameOver && !gameMessageElement.classList.contains('hidden')) return; 
+
             let direction = '';
             switch (event.key) {
                 case 'ArrowUp':
@@ -1000,6 +1022,7 @@
         }
 
         function handleTouchStart(event) {
+            if (isGameOver || (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden'))) return; // Block moves if game is over/won and message is visible
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
         }
@@ -1009,7 +1032,7 @@
         }
 
         function handleTouchEnd(event) {
-            if (isGameOver || (isGameWon && tryAgainButton.textContent === 'Keep Playing')) return;
+            if (isGameOver || (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden'))) return; // Block moves if game is over/won and message is visible
 
             touchEndX = event.changedTouches[0].clientX;
             touchEndY = event.changedTouches[0].clientY;
@@ -1037,12 +1060,16 @@
         }
 
         restartButton.addEventListener('click', initializeGame);
+        undoButton.addEventListener('click', undoMove); // Add event listener for undo button
         tryAgainButton.addEventListener('click', () => {
             if (isGameOver) {
                 initializeGame(); // Start new game if game over
             } else if (isGameWon) {
                 // If user won, they can keep playing, just hide the message
                 gameMessageElement.classList.add('hidden');
+                // Ensure moves are re-enabled only if not truly Game Over
+                isGameOver = false; // Reset game over flag if user decided to keep playing after winning
+                saveGame();
             }
         });
 
@@ -1081,10 +1108,8 @@
             loadBestScore();
             if (!loadGame()) {
                 initializeGame();
-            } else {
-                // If game loaded, re-check status in case it was already over/won
-                checkGameStatus();
             }
+            updateUndoButtonState(); // Ensure button state is correct after initial load
         });
     </script>
 </body>
