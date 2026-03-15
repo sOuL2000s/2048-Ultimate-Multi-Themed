@@ -180,7 +180,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* Prevent scroll on some mobile devices */
+            overflow-y: auto; /* Allow vertical scrolling if content overflows */
             padding: 20px;
             transition: background-color 0.5s ease; /* Smooth theme transition for base color */
         }
@@ -202,23 +202,33 @@
 
         /* Theme-specific background animations */
         body[data-theme="default"]::before {
-            background-image: radial-gradient(circle at 10% 20%, #f0f0e0, #fff); /* Soft, subtle glow */
+            background-image: radial-gradient(circle at 10% 20%, #f0f0e0 0%, #fff 50%, #f0f0e0 100%),
+                              radial-gradient(circle at 90% 80%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%); /* Soft, subtle glow with a secondary highlight */
+            background-blend-mode: overlay;
             animation-duration: 20s;
         }
         body[data-theme="dark"]::before {
-            background-image: radial-gradient(circle at 50% 10%, #3a3f47, #282c34, #1a1e24); /* Dark, cosmic feel */
+            background-image: radial-gradient(circle at 50% 10%, #3a3f47, #282c34 70%, #1a1e24),
+                              radial-gradient(circle at 20% 80%, rgba(171,178,191,0.1) 0%, rgba(171,178,191,0) 50%); /* Dark, cosmic feel with subtle stars */
+            background-blend-mode: overlay;
             animation-duration: 25s;
         }
         body[data-theme="forest"]::before {
-            background-image: linear-gradient(135deg, #a3c19e, #6f8f7c); /* Earthy, organic flow */
+            background-image: linear-gradient(135deg, #a3c19e, #6f8f7c, #4b6f5a),
+                              repeating-linear-gradient(45deg, rgba(75,111,90,0.1) 0px, rgba(75,111,90,0.1) 2px, transparent 2px, transparent 4px); /* Earthy, organic flow with subtle leaf texture */
+            background-blend-mode: overlay;
             animation-duration: 30s;
         }
         body[data-theme="ocean"]::before {
-            background-image: linear-gradient(45deg, #aed6f1, #3498db, #1e88e5); /* Wavy, oceanic depth */
+            background-image: linear-gradient(45deg, #aed6f1, #3498db, #1e88e5, #0d47a1),
+                              radial-gradient(circle at 70% 30%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%); /* Wavy, oceanic depth with a subtle sun glare */
+            background-blend-mode: overlay;
             animation-duration: 28s;
         }
         body[data-theme="sunset"]::before {
-            background-image: radial-gradient(circle at 80% 80%, #f48fb1, #e91e63, #ad1457); /* Warm, fading glow */
+            background-image: radial-gradient(circle at 80% 80%, #f48fb1, #e91e63, #ad1457, #5b0f42),
+                              linear-gradient(90deg, rgba(252,228,236,0.1) 0%, rgba(252,228,236,0.1) 1px, transparent 1px, transparent 2px); /* Warm, fading glow with a subtle stripe pattern */
+            background-blend-mode: overlay;
             animation-duration: 22s;
         }
 
@@ -265,7 +275,7 @@
             background: var(--score-bg);
             color: var(--score-text);
             padding: 8px 12px;
-            border-radius: 6px; /* Slightly more rounded */
+            border-radius: 8px; /* Slightly more circular */
             font-size: 0.8em;
             font-weight: bold;
             text-align: center;
@@ -274,7 +284,9 @@
         }
 
         .score-box #score,
-        .score-box #best-score {
+        .score-box #best-score,
+        .score-box #moves-count, /* Added for moves count */
+        .score-box #game-timer { /* Added for game timer */
             font-size: 1.6em;
             font-weight: bold;
             margin-top: 2px;
@@ -294,7 +306,7 @@
             color: var(--button-text);
             padding: 10px 15px;
             border: none;
-            border-radius: 6px; /* Slightly more rounded */
+            border-radius: 8px; /* Slightly more circular */
             font-size: 1em;
             font-weight: bold;
             cursor: pointer;
@@ -348,7 +360,7 @@
         #game-container {
             position: relative;
             background: var(--game-board-bg);
-            border-radius: 8px; /* Slightly more rounded */
+            border-radius: 10px; /* Slightly more circular */
             padding: 10px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle inner shadow for board depth */
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -362,13 +374,14 @@
             width: 100%;
             padding-bottom: 100%; /* Makes height equal to width */
             position: relative;
+            border-radius: 10px; /* Make game board more circular */
         }
 
         .tile-placeholder {
             width: 100%;
             height: 100%;
             background: var(--tile-bg-empty);
-            border-radius: 6px; /* More rounded */
+            border-radius: 8px; /* More circular */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -382,7 +395,7 @@
             width: calc((100% - 3 * 10px) / 4); /* (100% - (N-1)*gap) / N */
             height: calc((100% - 3 * 10px) / 4);
             background: var(--tile-bg-empty);
-            border-radius: 6px; /* More rounded tiles */
+            border-radius: 8px; /* More circular tiles */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -390,28 +403,28 @@
             font-weight: bold;
             color: var(--tile-text-dark);
             /* Smoother transitions for a "relaxing" feel */
-            transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
-                        background-color 0.2s ease-in-out,
-                        color 0.2s ease-in-out,
-                        left 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
-                        top 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), /* Slower, slightly more pronounced ease */
+                        background-color 0.3s ease-in-out,
+                        color 0.3s ease-in-out,
+                        left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        top 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 1;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow for tile depth */
         }
 
         .tile-new {
-            animation: appear 0.2s ease-in-out;
+            animation: appear 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .tile-merged {
-            animation: merge 0.2s ease-in-out;
+            animation: merge 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 2; /* Ensure merged tiles are above others during animation */
         }
 
         @keyframes appear {
             0% {
                 opacity: 0;
-                transform: scale(0.8); /* Start slightly larger than 0 to make appearance smoother */
+                transform: scale(0.7); /* Start slightly smaller to fade in more gently */
             }
             100% {
                 opacity: 1;
@@ -424,7 +437,7 @@
                 transform: scale(1);
             }
             50% {
-                transform: scale(1.15); /* More pronounced bounce */
+                transform: scale(1.1); /* Slightly less pronounced bounce for relaxing feel */
             }
             100% {
                 transform: scale(1);
@@ -946,7 +959,7 @@
                 if (newTileElement) {
                     newTileElement.classList.add('tile-new');
                     // Remove the class after the animation duration to allow subsequent transitions
-                    setTimeout(() => newTileElement.classList.remove('tile-new'), 200); // Match animation duration
+                    setTimeout(() => newTileElement.classList.remove('tile-new'), 300); // Match animation duration
                 }
             }
         }
@@ -978,11 +991,11 @@
             // Apply new animations after initial render
             if (firstTile) {
                 const tileElement = gameBoardElement.querySelector(`.tile[data-row="${firstTile.r}"][data-col="${firstTile.c}"][data-value="${firstTile.value}"]`);
-                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 200); }
+                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 300); }
             }
             if (secondTile) {
                 const tileElement = gameBoardElement.querySelector(`.tile[data-row="${secondTile.r}"][data-col="${secondTile.c}"][data-value="${secondTile.value}"]`);
-                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 200); }
+                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 300); }
             }
 
             updateUndoButtonState(); // Update undo button state after init
@@ -1121,7 +1134,7 @@
                     // Check game status and save after animations
                     checkGameStatus();
                     saveGame();
-                }, 200); // Match CSS transition duration for position changes for smoother feel
+                }, 300); // Match CSS transition duration for position changes for smoother feel
             } else {
                 // If no tiles moved, pop the last state from undo stack as no valid move occurred
                 undoStack.pop();
