@@ -173,7 +173,7 @@
         }
 
         body {
-            background: var(--bg-color);
+            background: var(--bg-color); /* Base background color */
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -182,18 +182,63 @@
             margin: 0;
             overflow: hidden; /* Prevent scroll on some mobile devices */
             padding: 20px;
+            transition: background-color 0.5s ease; /* Smooth theme transition for base color */
+        }
+
+        /* Animated background pseudo-element for theme-specific textures/animations */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Place behind all content */
+            opacity: 0.15; /* Make the animation subtle and relaxed */
+            background-size: 200% 200%; /* Larger than viewport for animation movement */
+            animation: gradientShift 25s ease-in-out infinite alternate; /* Default animation */
+            transition: background-image 0.5s ease, opacity 0.3s ease, background-position 0s; /* Smooth transition for background image on theme change */
+        }
+
+        /* Theme-specific background animations */
+        body[data-theme="default"]::before {
+            background-image: radial-gradient(circle at 10% 20%, #f0f0e0, #fff); /* Soft, subtle glow */
+            animation-duration: 20s;
+        }
+        body[data-theme="dark"]::before {
+            background-image: radial-gradient(circle at 50% 10%, #3a3f47, #282c34, #1a1e24); /* Dark, cosmic feel */
+            animation-duration: 25s;
+        }
+        body[data-theme="forest"]::before {
+            background-image: linear-gradient(135deg, #a3c19e, #6f8f7c); /* Earthy, organic flow */
+            animation-duration: 30s;
+        }
+        body[data-theme="ocean"]::before {
+            background-image: linear-gradient(45deg, #aed6f1, #3498db, #1e88e5); /* Wavy, oceanic depth */
+            animation-duration: 28s;
+        }
+        body[data-theme="sunset"]::before {
+            background-image: radial-gradient(circle at 80% 80%, #f48fb1, #e91e63, #ad1457); /* Warm, fading glow */
+            animation-duration: 22s;
+        }
+
+        /* Keyframe animation for background position shift */
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
         }
 
         #game-wrapper {
-            background: var(--bg-color);
-            border-radius: 8px;
+            background: var(--bg-color); /* Still uses base color */
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             max-width: 500px;
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            transition: background-color 0.5s ease, box-shadow 0.3s ease; /* Match body transition duration */
         }
 
         header {
@@ -220,11 +265,12 @@
             background: var(--score-bg);
             color: var(--score-text);
             padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 6px; /* Slightly more rounded */
             font-size: 0.8em;
             font-weight: bold;
             text-align: center;
             min-width: 80px;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1); /* Subtle inner shadow for depth */
         }
 
         .score-box #score,
@@ -248,11 +294,12 @@
             color: var(--button-text);
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px; /* Slightly more rounded */
             font-size: 1em;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
+            transition: background-color 0.2s ease, transform 0.1s ease, filter 0.2s ease; /* Smoother transitions */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
         }
 
         button:hover {
@@ -301,8 +348,10 @@
         #game-container {
             position: relative;
             background: var(--game-board-bg);
-            border-radius: 6px;
+            border-radius: 8px; /* Slightly more rounded */
             padding: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle inner shadow for board depth */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         #game-board {
@@ -319,7 +368,7 @@
             width: 100%;
             height: 100%;
             background: var(--tile-bg-empty);
-            border-radius: 3px;
+            border-radius: 6px; /* More rounded */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -333,15 +382,21 @@
             width: calc((100% - 3 * 10px) / 4); /* (100% - (N-1)*gap) / N */
             height: calc((100% - 3 * 10px) / 4);
             background: var(--tile-bg-empty);
-            border-radius: 3px;
+            border-radius: 6px; /* More rounded tiles */
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2.5em;
             font-weight: bold;
             color: var(--tile-text-dark);
-            transition: transform 0.15s ease-in-out, background-color 0.1s ease-in-out, color 0.1s ease-in-out, left 0.15s ease-in-out, top 0.15s ease-in-out;
+            /* Smoother transitions for a "relaxing" feel */
+            transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
+                        background-color 0.2s ease-in-out,
+                        color 0.2s ease-in-out,
+                        left 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
+                        top 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
             z-index: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow for tile depth */
         }
 
         .tile-new {
@@ -356,7 +411,7 @@
         @keyframes appear {
             0% {
                 opacity: 0;
-                transform: scale(0);
+                transform: scale(0.8); /* Start slightly larger than 0 to make appearance smoother */
             }
             100% {
                 opacity: 1;
@@ -366,10 +421,10 @@
 
         @keyframes merge {
             0% {
-                transform: scale(0.8);
+                transform: scale(1);
             }
             50% {
-                transform: scale(1.1);
+                transform: scale(1.15); /* More pronounced bounce */
             }
             100% {
                 transform: scale(1);
@@ -437,6 +492,9 @@
             .scores {
                 width: 100%;
                 justify-content: space-around;
+                display: grid; /* Use grid for better score box layout on small screens */
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
             .score-box {
                 flex-grow: 1;
@@ -449,6 +507,12 @@
             .game-buttons {
                 width: 100%;
                 justify-content: space-between;
+                flex-wrap: wrap; /* Allow buttons to wrap */
+                gap: 8px; /* Smaller gap */
+            }
+            .game-buttons button {
+                flex-grow: 1; /* Allow buttons to grow */
+                min-width: 100px; /* Ensure minimum width */
             }
             .theme-selector {
                 justify-content: center;
@@ -475,6 +539,74 @@
                 padding: 15px;
             }
         }
+
+        /* Further responsive adjustments for very small screens (e.g., ~300px width) */
+        @media (max-width: 380px) {
+            #game-wrapper {
+                padding: 10px; /* Reduce wrapper padding further */
+                gap: 15px; /* Slightly less gap between sections */
+            }
+            header {
+                flex-direction: column; /* Stack header elements */
+                align-items: center;
+            }
+            h1 {
+                font-size: 2em; /* Smaller H1 */
+                margin-bottom: 10px; /* Add space below H1 */
+            }
+            .scores {
+                grid-template-columns: repeat(2, 1fr); /* Keep 2 columns for scores, they should scale */
+                gap: 5px; /* Smaller gap for score boxes */
+            }
+            .score-box {
+                padding: 6px 8px; /* Smaller padding for score boxes */
+                min-width: 70px; /* Ensure minimum width for score boxes */
+            }
+            .score-box #score,
+            .score-box #best-score,
+            .score-box #moves-count,
+            .score-box #game-timer { /* Adjust score number font size */
+                font-size: 1.4em;
+            }
+            .controls {
+                gap: 10px; /* Reduce gap in controls */
+            }
+            .game-buttons {
+                flex-direction: column; /* Stack game buttons */
+                gap: 6px;
+            }
+            .game-buttons button {
+                min-width: unset; /* Remove min-width to allow full stretch */
+                width: 100%; /* Make buttons full width */
+                padding: 8px 10px; /* Smaller button padding */
+            }
+            .theme-selector {
+                flex-wrap: wrap; /* Ensure theme buttons wrap */
+                justify-content: center;
+                gap: 4px; /* Even smaller gap for theme buttons */
+                font-size: 0.9em; /* Smaller font for theme selector text */
+            }
+            .theme-selector .theme-button {
+                padding: 6px 10px; /* Smaller theme button padding */
+                font-size: 0.8em; /* Smaller font for theme buttons */
+            }
+            .tile {
+                font-size: 1.8em; /* Further reduce tile font size */
+            }
+            .tile[data-value="128"], .tile[data-value="256"], .tile[data-value="512"] { font-size: 1.6em; }
+            .tile[data-value="1024"], .tile[data-value="2048"] { font-size: 1.3em; }
+            .tile[data-value^="4096"], .tile[data-value^="8192"], .tile[data-value^="16384"], .tile[data-value^="32768"], .tile[data-value^="65536"] {
+                font-size: 1em; /* Smallest for super large numbers */
+            }
+            #game-message {
+                font-size: 2em; /* Smaller game over message */
+                gap: 15px;
+            }
+            #try-again-button {
+                font-size: 0.9em; /* Smaller try again button */
+                padding: 10px 15px;
+            }
+        }
     </style>
 </head>
 <body data-theme="default">
@@ -490,6 +622,15 @@
                     Best
                     <div id="best-score">0</div>
                 </div>
+                <!-- New statistics -->
+                <div class="score-box">
+                    Moves
+                    <div id="moves-count">0</div>
+                </div>
+                <div class="score-box">
+                    Time
+                    <div id="game-timer">00:00</div>
+                </div>
             </div>
         </header>
 
@@ -497,6 +638,7 @@
             <div class="game-buttons">
                 <button id="restart-button">New Game</button>
                 <button id="undo-button" disabled>Undo</button>
+                <button id="settings-button">Settings</button> <!-- Placeholder for settings -->
             </div>
             <div class="theme-selector">
                 <span>Theme:</span>
@@ -531,6 +673,9 @@
         let board = [];
         let score = 0;
         let bestScore = 0;
+        let movesCount = 0; // New: Track moves
+        let gameStartTime = 0; // New: Track game start time for timer
+        let timerInterval; // New: For timer
         let isGameOver = false;
         let isGameWon = false;
         let currentTheme = 'default';
@@ -544,11 +689,14 @@
         // DOM Elements
         const scoreElement = document.getElementById('score');
         const bestScoreElement = document.getElementById('best-score');
+        const movesCountElement = document.getElementById('moves-count'); // New: Moves count element
+        const gameTimerElement = document.getElementById('game-timer'); // New: Game timer element
         const gameBoardElement = document.getElementById('game-board');
         const gameMessageElement = document.getElementById('game-message');
         const messageTextElement = document.getElementById('message-text');
         const restartButton = document.getElementById('restart-button');
         const undoButton = document.getElementById('undo-button'); // New undo button
+        const settingsButton = document.getElementById('settings-button'); // New: Settings button
         const tryAgainButton = document.getElementById('try-again-button');
         const themeButtons = document.querySelectorAll('.theme-button');
         const bodyElement = document.body;
@@ -560,6 +708,8 @@
                 board: board,
                 score: score,
                 bestScore: bestScore,
+                movesCount: movesCount, // New: Save moves count
+                gameStartTime: gameStartTime, // New: Save game start time
                 isGameWon: isGameWon,
                 isGameOver: isGameOver, // Save game over state
                 undoStack: undoStack // Save the undo stack
@@ -573,12 +723,15 @@
                 board = data.board;
                 score = data.score;
                 bestScore = data.bestScore;
+                movesCount = data.movesCount || 0; // New: Load moves count
+                gameStartTime = data.gameStartTime || Date.now(); // New: Load game start time
                 isGameWon = data.isGameWon;
                 isGameOver = data.isGameOver; // Load game over state
                 undoStack = data.undoStack || []; // Load undo stack, default to empty array
 
                 updateScore(0); // Update score display without adding to score
                 updateBestScore();
+                updateMovesCount(0); // Update moves display
                 renderBoard();
                 
                 // Restore game message state if applicable
@@ -586,12 +739,15 @@
                     gameMessageElement.classList.remove('hidden');
                     messageTextElement.textContent = 'You Win!';
                     tryAgainButton.textContent = 'Keep Playing';
+                    stopTimer(); // Stop timer if won and not trying again
                 } else if (isGameOver) {
                     gameMessageElement.classList.remove('hidden');
                     messageTextElement.textContent = 'Game Over!';
                     tryAgainButton.textContent = 'Try Again';
+                    stopTimer(); // Stop timer if game over
                 } else {
                     gameMessageElement.classList.add('hidden');
+                    startTimer(); // Resume timer if game is active
                 }
 
                 updateUndoButtonState(); // Update undo button state after loading
@@ -633,6 +789,8 @@
             undoStack.push({
                 board: JSON.parse(JSON.stringify(board)), // Deep copy board
                 score: score,
+                movesCount: movesCount, // New: Save moves count to undo
+                gameStartTime: gameStartTime, // New: Save game start time to undo
                 isGameWon: isGameWon,
                 isGameOver: isGameOver
             });
@@ -645,11 +803,14 @@
                 const prevState = undoStack.pop();
                 board = prevState.board;
                 score = prevState.score;
+                movesCount = prevState.movesCount; // New: Restore moves count
+                gameStartTime = prevState.gameStartTime; // New: Restore game start time
                 isGameWon = prevState.isGameWon;
                 isGameOver = prevState.isGameOver;
 
                 // Update UI elements
                 scoreElement.textContent = score;
+                movesCountElement.textContent = movesCount; // New: Update moves display
                 // Best score is not undone, it's a persistent high score
                 renderBoard();
                 
@@ -658,12 +819,15 @@
                     gameMessageElement.classList.remove('hidden');
                     messageTextElement.textContent = 'You Win!';
                     tryAgainButton.textContent = 'Keep Playing';
+                    stopTimer();
                 } else if (isGameOver) {
                     gameMessageElement.classList.remove('hidden');
                     messageTextElement.textContent = 'Game Over!';
                     tryAgainButton.textContent = 'Try Again';
+                    stopTimer();
                 } else {
                     gameMessageElement.classList.add('hidden');
+                    startTimer(); // Resume timer if game is active after undo
                 }
 
                 updateUndoButtonState();
@@ -688,6 +852,38 @@
         function updateBestScore() {
             bestScoreElement.textContent = bestScore;
         }
+
+        function updateMovesCount(count = 1) { // New function to update moves
+            movesCount += count;
+            movesCountElement.textContent = movesCount;
+        }
+
+        function formatTime(seconds) { // New function to format time
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateGameTimer() { // New function to update timer display
+            if (gameStartTime === 0) return; // Only update if timer has started
+            const elapsedTime = Math.floor((Date.now() - gameStartTime) / 1000);
+            gameTimerElement.textContent = formatTime(elapsedTime);
+        }
+
+        function startTimer() { // New function to start/resume timer
+            if (timerInterval) clearInterval(timerInterval); // Clear any existing interval
+            if (gameStartTime === 0 || isGameOver || isGameWon) {
+                 gameStartTime = Date.now(); // Start fresh if new game or resuming after winning and keeping playing
+            }
+            timerInterval = setInterval(updateGameTimer, 1000);
+            updateGameTimer(); // Initial update
+        }
+
+        function stopTimer() { // New function to stop timer
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
 
         function getTilePosition(row, col) {
             const boardWidth = gameBoardElement.offsetWidth;
@@ -760,6 +956,8 @@
         function initializeGame() {
             board = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
             score = 0;
+            movesCount = 0; // New: Reset moves count
+            gameStartTime = 0; // New: Reset game start time
             isGameOver = false;
             isGameWon = false;
             gameMessageElement.classList.add('hidden');
@@ -768,7 +966,10 @@
             undoStack = []; // Clear undo stack for a new game
 
             updateScore(0); // Reset score display
+            updateMovesCount(0); // Reset moves display
             loadBestScore();
+            stopTimer(); // Ensure timer is stopped before starting a new one
+            startTimer(); // New: Start the game timer
             
             const firstTile = addRandomTile();
             const secondTile = addRandomTile();
@@ -865,7 +1066,7 @@
 
             let hasMoved = false;
             let totalMergedPoints = 0;
-            const oldBoard = JSON.parse(JSON.stringify(board)); // Deep copy to detect actual moves
+            // const oldBoard = JSON.parse(JSON.stringify(board)); // No longer needed directly for move detection if slideAndMerge returns 'moved'
 
             for (let i = 0; i < BOARD_SIZE; i++) {
                 let line;
@@ -911,6 +1112,7 @@
 
             if (hasMoved) {
                 updateScore(totalMergedPoints);
+                updateMovesCount(); // New: Increment moves count
                 const newTile = addRandomTile();
                 
                 // Trigger re-render after a short delay to allow CSS transitions to play out
@@ -919,7 +1121,7 @@
                     // Check game status and save after animations
                     checkGameStatus();
                     saveGame();
-                }, 160); // Match CSS transition duration for position changes
+                }, 200); // Match CSS transition duration for position changes for smoother feel
             } else {
                 // If no tiles moved, pop the last state from undo stack as no valid move occurred
                 undoStack.pop();
@@ -960,6 +1162,7 @@
                             isGameWon = true;
                             showMessage('You Win!');
                             tryAgainButton.textContent = 'Keep Playing'; // Allow continuing after win
+                            stopTimer();
                             saveGame();
                             return;
                         }
@@ -971,6 +1174,7 @@
                 isGameOver = true;
                 showMessage('Game Over!');
                 tryAgainButton.textContent = 'Try Again';
+                stopTimer();
                 saveGame();
                 updateUndoButtonState(); // Disable undo button if game over
             }
@@ -988,6 +1192,7 @@
             if (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden')) {
                 if (event.key === 'Enter') {
                     gameMessageElement.classList.add('hidden');
+                    startTimer(); // Resume timer if keeping playing
                     return; // Consume Enter, don't process as move
                 }
                 event.preventDefault(); // Block other keys from moving
@@ -1061,6 +1266,10 @@
 
         restartButton.addEventListener('click', initializeGame);
         undoButton.addEventListener('click', undoMove); // Add event listener for undo button
+        settingsButton.addEventListener('click', () => { // New: Placeholder for settings button
+            alert('Settings button clicked! (No settings implemented yet)');
+            // Here you would typically open a settings modal or panel
+        });
         tryAgainButton.addEventListener('click', () => {
             if (isGameOver) {
                 initializeGame(); // Start new game if game over
@@ -1069,6 +1278,7 @@
                 gameMessageElement.classList.add('hidden');
                 // Ensure moves are re-enabled only if not truly Game Over
                 isGameOver = false; // Reset game over flag if user decided to keep playing after winning
+                startTimer(); // Resume timer if keeping playing
                 saveGame();
             }
         });
@@ -1107,7 +1317,16 @@
             loadThemePreference();
             loadBestScore();
             if (!loadGame()) {
-                initializeGame();
+                initializeGame(); // If no saved game, start a new one
+            } else {
+                // If game was loaded, ensure timer starts/stops correctly based on game state
+                if (!isGameOver && !isGameWon) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+                updateGameTimer(); // Display correct time immediately on load
+                updateMovesCount(0); // Display correct moves immediately on load (without incrementing)
             }
             updateUndoButtonState(); // Ensure button state is correct after initial load
         });
