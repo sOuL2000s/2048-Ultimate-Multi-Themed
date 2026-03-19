@@ -198,36 +198,42 @@
             background-size: 200% 200%; /* Larger than viewport for animation movement */
             animation: gradientShift 25s ease-in-out infinite alternate; /* Default animation */
             transition: background-image 0.5s ease, opacity 0.3s ease, background-position 0s; /* Smooth transition for background image on theme change */
+            will-change: background-position; /* Hint to browser for performance optimization */
         }
 
         /* Theme-specific background animations */
         body[data-theme="default"]::before {
             background-image: radial-gradient(circle at 10% 20%, #f0f0e0 0%, #fff 50%, #f0f0e0 100%),
-                              radial-gradient(circle at 90% 80%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%); /* Soft, subtle glow with a secondary highlight */
+                              radial-gradient(circle at 90% 80%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%),
+                              radial-gradient(circle at 40% 60%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%); /* Soft, subtle glow with secondary highlights and gentle noise simulation */
             background-blend-mode: overlay;
             animation-duration: 20s;
         }
         body[data-theme="dark"]::before {
             background-image: radial-gradient(circle at 50% 10%, #3a3f47, #282c34 70%, #1a1e24),
-                              radial-gradient(circle at 20% 80%, rgba(171,178,191,0.1) 0%, rgba(171,178,191,0) 50%); /* Dark, cosmic feel with subtle stars */
+                              radial-gradient(circle at 20% 80%, rgba(171,178,191,0.1) 0%, rgba(171,178,191,0) 50%),
+                              radial-gradient(circle at 70% 30%, rgba(171,178,191,0.05) 0%, rgba(171,178,191,0) 60%); /* Dark, cosmic feel with subtle stars and nebulous depths */
             background-blend-mode: overlay;
             animation-duration: 25s;
         }
         body[data-theme="forest"]::before {
             background-image: linear-gradient(135deg, #a3c19e, #6f8f7c, #4b6f5a),
-                              repeating-linear-gradient(45deg, rgba(75,111,90,0.1) 0px, rgba(75,111,90,0.1) 2px, transparent 2px, transparent 4px); /* Earthy, organic flow with subtle leaf texture */
+                              repeating-linear-gradient(45deg, rgba(75,111,90,0.1) 0px, rgba(75,111,90,0.1) 2px, transparent 2px, transparent 4px),
+                              radial-gradient(circle at 25% 75%, rgba(150,200,150,0.1) 0%, rgba(150,200,150,0) 50%); /* Earthy, organic flow with subtle leaf texture and dappled light */
             background-blend-mode: overlay;
             animation-duration: 30s;
         }
         body[data-theme="ocean"]::before {
             background-image: linear-gradient(45deg, #aed6f1, #3498db, #1e88e5, #0d47a1),
-                              radial-gradient(circle at 70% 30%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%); /* Wavy, oceanic depth with a subtle sun glare */
+                              radial-gradient(circle at 70% 30%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%),
+                              repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 15px); /* Wavy, oceanic depth with subtle sun glare and underwater currents */
             background-blend-mode: overlay;
             animation-duration: 28s;
         }
         body[data-theme="sunset"]::before {
             background-image: radial-gradient(circle at 80% 80%, #f48fb1, #e91e63, #ad1457, #5b0f42),
-                              linear-gradient(90deg, rgba(252,228,236,0.1) 0%, rgba(252,228,236,0.1) 1px, transparent 1px, transparent 2px); /* Warm, fading glow with a subtle stripe pattern */
+                              linear-gradient(90deg, rgba(252,228,236,0.1) 0%, rgba(252,228,236,0.1) 1px, transparent 1px, transparent 2px),
+                              radial-gradient(circle at 30% 70%, rgba(255,200,150,0.1) 0%, rgba(255,200,150,0) 50%); /* Warm, fading glow with subtle stripe pattern and atmospheric haze */
             background-blend-mode: overlay;
             animation-duration: 22s;
         }
@@ -236,6 +242,14 @@
         @keyframes gradientShift {
             0% { background-position: 0% 0%; }
             100% { background-position: 100% 100%; }
+        }
+
+        /* Accessibility: Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+            body::before {
+                animation: none !important; /* Disable background animation */
+                background-position: center !important; /* Set static background position */
+            }
         }
 
         #game-wrapper {
@@ -461,10 +475,6 @@
         /* Font size adjustments for larger numbers */
         .tile[data-value="128"], .tile[data-value="256"], .tile[data-value="512"] { font-size: 2.2em; }
         .tile[data-value="1024"], .tile[data-value="2048"] { font-size: 1.8em; }
-        .tile[data-value] {
-            /* General font size adjustment for numbers with 4+ digits */
-            /* If JS can add a class or style, that's more reliable */
-        }
         .tile[data-value^="4096"], .tile[data-value^="8192"], .tile[data-value^="16384"], .tile[data-value^="32768"], .tile[data-value^="65536"] {
             font-size: 1.5em;
         }
@@ -496,6 +506,109 @@
             padding: 12px 20px;
             font-size: 1.2em;
         }
+
+        /* NEW: Icon button styles for mute */
+        .icon-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-width: unset; /* Override default button min-width if set */
+            padding: 10px 12px;
+        }
+        .icon-button svg {
+            width: 1.2em; /* Adjust size relative to font */
+            height: 1.2em;
+            color: var(--button-text);
+            transition: color 0.2s ease;
+        }
+        .icon-button.muted svg {
+            position: relative;
+            overflow: hidden; /* Hide extra line */
+        }
+        .icon-button.muted svg::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--button-text);
+            transform: translateY(-50%) rotate(-45deg); /* Cross-out effect */
+            transform-origin: center;
+        }
+
+        /* NEW: Settings Modal */
+        #settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #settings-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            color: var(--text-color);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .modal-content h2 {
+            font-size: 2em;
+            color: var(--header-bg);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .setting-item label {
+            font-weight: bold;
+            flex-grow: 1;
+        }
+
+        .setting-item input[type="checkbox"] {
+            width: 24px; /* Larger touch target */
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--button-bg); /* Style checkbox */
+        }
+
+        #close-settings-button {
+            margin-top: 20px;
+            align-self: flex-end; /* Align to right */
+            padding: 10px 20px;
+            font-size: 1.1em;
+        }
+
 
         /* Responsive adjustments */
         @media (max-width: 600px) {
@@ -550,6 +663,21 @@
             }
             #game-wrapper {
                 padding: 15px;
+            }
+            /* Settings modal responsiveness */
+            .modal-content {
+                padding: 20px;
+                gap: 15px;
+            }
+            .modal-content h2 {
+                font-size: 1.8em;
+            }
+            .setting-item {
+                font-size: 1em;
+            }
+            #close-settings-button {
+                padding: 8px 15px;
+                font-size: 1em;
             }
         }
 
@@ -619,10 +747,25 @@
                 font-size: 0.9em; /* Smaller try again button */
                 padding: 10px 15px;
             }
+            /* Settings modal responsiveness */
+            .modal-content {
+                padding: 15px;
+            }
+            .setting-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+            }
         }
     </style>
 </head>
 <body data-theme="default">
+    <!-- NEW: Audio elements for sound effects -->
+    <audio id="moveSound" src="sounds/move.mp3" preload="auto"></audio>
+    <audio id="mergeSound" src="sounds/merge.mp3" preload="auto"></audio>
+    <audio id="winSound" src="sounds/win.mp3" preload="auto"></audio>
+    <audio id="loseSound" src="sounds/lose.mp3" preload="auto"></audio>
+    <audio id="buttonSound" src="sounds/button.mp3" preload="auto"></audio>
+
     <div id="game-wrapper">
         <header>
             <h1>2048 Ultimate</h1>
@@ -651,7 +794,15 @@
             <div class="game-buttons">
                 <button id="restart-button">New Game</button>
                 <button id="undo-button" disabled>Undo</button>
-                <button id="settings-button">Settings</button> <!-- Placeholder for settings -->
+                <!-- Existing Settings button -->
+                <button id="settings-button">Settings</button>
+                <!-- NEW: Mute button -->
+                <button id="mute-button" class="icon-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.5 4.06c0-1.336-1.676-2.004-2.75-1.06l-1.555 1.485A.75.75 0 018 4.75v14.5a.75.75 0 011.2.515l1.555 1.485c1.074.944 2.75.276 2.75-1.06V4.06z"/>
+                    </svg>
+                    <span>Mute</span>
+                </button>
             </div>
             <div class="theme-selector">
                 <span>Theme:</span>
@@ -678,12 +829,30 @@
         </div>
     </div>
 
+    <!-- NEW: Settings Modal Structure -->
+    <div id="settings-modal" class="hidden">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="setting-item">
+                <label for="sound-toggle">Sound Effects:</label>
+                <input type="checkbox" id="sound-toggle" checked>
+            </div>
+            <div class="setting-item">
+                <label for="volume-slider">Volume:</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+            </div>
+            <button id="close-settings-button">Close</button>
+        </div>
+    </div>
+
     <script>
         const BOARD_SIZE = 4;
         const TILE_GAP = 10; // Must match CSS gap value
         const UNDO_STACK_LIMIT = 10; // Maximum number of moves to store for undo
 
-        let board = [];
+        let board = []; // Now stores { value, id } objects or 0
+        let nextTileId = 0; // New: Unique ID counter for tiles
+
         let score = 0;
         let bestScore = 0;
         let movesCount = 0; // New: Track moves
@@ -714,18 +883,112 @@
         const themeButtons = document.querySelectorAll('.theme-button');
         const bodyElement = document.body;
 
+        // NEW: Audio elements
+        const moveSound = document.getElementById('moveSound');
+        const mergeSound = document.getElementById('mergeSound');
+        const winSound = document.getElementById('winSound');
+        const loseSound = document.getElementById('loseSound');
+        const buttonSound = document.getElementById('buttonSound');
+
+        let isSoundEnabled = localStorage.getItem('2048SoundEnabled') === 'false' ? false : true; // Default to true
+        let globalVolume = 1.0; // NEW: Global volume control
+
+        // NEW: Settings modal elements
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsButton = document.getElementById('close-settings-button');
+        const soundToggle = document.getElementById('sound-toggle');
+        const muteButton = document.getElementById('mute-button'); // Get the new mute button
+        const volumeSlider = document.getElementById('volume-slider'); // NEW: Volume slider element
+
+        // Array of all audio elements for easier iteration
+        const allAudioElements = [moveSound, mergeSound, winSound, loseSound, buttonSound];
+
+
+        // --- Audio Functions ---
+
+        // NEW: Function to apply global volume to all audio elements
+        function applyGlobalVolume() {
+            allAudioElements.forEach(audio => {
+                if (audio) {
+                    audio.volume = globalVolume;
+                }
+            });
+        }
+
+        function playSound(soundElement) {
+            if (isSoundEnabled && soundElement) {
+                soundElement.currentTime = 0; // Rewind to start
+                // Volume is already set via applyGlobalVolume, but setting it here again for good measure
+                // in case the slider changes while a sound is currently playing (though it's better to update all
+                // when slider changes). The primary control is via `applyGlobalVolume`.
+                soundElement.play().catch(e => console.log("Audio play failed:", e)); // Catch and ignore potential autoplay errors
+            }
+        }
+
+        function updateMuteButtonUI() {
+            if (isSoundEnabled) {
+                muteButton.classList.remove('muted');
+            } else {
+                muteButton.classList.add('muted');
+            }
+            soundToggle.checked = isSoundEnabled;
+        }
+
+        // --- Settings Modal Functions ---
+        function openSettingsModal() {
+            playSound(buttonSound);
+            settingsModal.classList.add('visible');
+            settingsModal.classList.remove('hidden');
+            updateMuteButtonUI(); // Ensure toggle state is correct when opening
+            volumeSlider.value = globalVolume; // NEW: Set volume slider to current global volume
+        }
+
+        function closeSettingsModal() {
+            playSound(buttonSound);
+            settingsModal.classList.remove('visible');
+            // Allow animation to play before hiding completely
+            setTimeout(() => settingsModal.classList.add('hidden'), 300);
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            localStorage.setItem('2048SoundEnabled', isSoundEnabled);
+            updateMuteButtonUI();
+            if (isSoundEnabled) {
+                playSound(buttonSound); // Play sound if just unmuted
+            }
+        }
+
+        // --- Event Listeners for Audio/Settings ---
+        muteButton.addEventListener('click', toggleSound);
+        settingsButton.addEventListener('click', openSettingsModal);
+        closeSettingsButton.addEventListener('click', closeSettingsModal);
+        soundToggle.addEventListener('change', toggleSound);
+
+        // NEW: Event listener for volume slider
+        volumeSlider.addEventListener('input', (event) => {
+            globalVolume = parseFloat(event.target.value);
+            localStorage.setItem('2048Volume', globalVolume);
+            applyGlobalVolume(); // Apply new volume to all audio elements
+        });
+
+        // Initial UI setup for sound and volume
+        updateMuteButtonUI();
+        // applyGlobalVolume is called in DOMContentLoaded
+
         // --- Game State Management (Local Storage) ---
 
         function saveGame() {
             localStorage.setItem('2048Game', JSON.stringify({
-                board: board,
+                board: board, // board now contains {value, id} objects
                 score: score,
                 bestScore: bestScore,
                 movesCount: movesCount, // New: Save moves count
                 gameStartTime: gameStartTime, // New: Save game start time
                 isGameWon: isGameWon,
                 isGameOver: isGameOver, // Save game over state
-                undoStack: undoStack // Save the undo stack
+                undoStack: undoStack, // Save the undo stack
+                nextTileId: nextTileId // New: Save the next available tile ID
             }));
         }
 
@@ -741,11 +1004,12 @@
                 isGameWon = data.isGameWon;
                 isGameOver = data.isGameOver; // Load game over state
                 undoStack = data.undoStack || []; // Load undo stack, default to empty array
+                nextTileId = data.nextTileId || 0; // New: Load nextTileId
 
                 updateScore(0); // Update score display without adding to score
                 updateBestScore();
                 updateMovesCount(0); // Update moves display
-                renderBoard();
+                animateAndRenderTiles(); // NEW: Use animateAndRenderTiles instead of renderBoard
                 
                 // Restore game message state if applicable
                 if (isGameWon && !isGameOver) {
@@ -800,12 +1064,13 @@
                 undoStack.shift(); // Remove oldest state if stack is full
             }
             undoStack.push({
-                board: JSON.parse(JSON.stringify(board)), // Deep copy board
+                board: JSON.parse(JSON.stringify(board)), // Deep copy board with {value, id} objects
                 score: score,
                 movesCount: movesCount, // New: Save moves count to undo
                 gameStartTime: gameStartTime, // New: Save game start time to undo
                 isGameWon: isGameWon,
-                isGameOver: isGameOver
+                isGameOver: isGameOver,
+                nextTileId: nextTileId // NEW: Save nextTileId
             });
             updateUndoButtonState();
             saveGame(); // Save game state including undo stack
@@ -820,12 +1085,14 @@
                 gameStartTime = prevState.gameStartTime; // New: Restore game start time
                 isGameWon = prevState.isGameWon;
                 isGameOver = prevState.isGameOver;
+                nextTileId = prevState.nextTileId; // NEW: Restore nextTileId
 
                 // Update UI elements
                 scoreElement.textContent = score;
                 movesCountElement.textContent = movesCount; // New: Update moves display
                 // Best score is not undone, it's a persistent high score
-                renderBoard();
+                animateAndRenderTiles(); // NEW: Use animateAndRenderTiles
+                playSound(buttonSound); // NEW: Play sound on undo
                 
                 // Restore game message state if applicable
                 if (isGameWon && !isGameOver) {
@@ -871,10 +1138,17 @@
             movesCountElement.textContent = movesCount;
         }
 
-        function formatTime(seconds) { // New function to format time
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        function formatTime(totalSeconds) { // New function to format time, now supporting hours
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            let timeString = '';
+            if (hours > 0) {
+                timeString += `${hours.toString().padStart(2, '0')}:`;
+            }
+            timeString += `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            return timeString;
         }
 
         function updateGameTimer() { // New function to update timer display
@@ -885,8 +1159,10 @@
 
         function startTimer() { // New function to start/resume timer
             if (timerInterval) clearInterval(timerInterval); // Clear any existing interval
-            if (gameStartTime === 0 || isGameOver || isGameWon) {
-                 gameStartTime = Date.now(); // Start fresh if new game or resuming after winning and keeping playing
+            // Only reset gameStartTime if it's a truly new game (0) or if the game has ended.
+            // If the game was won and the player chose to 'Keep Playing', the timer should continue.
+            if (gameStartTime === 0 || isGameOver) {
+                 gameStartTime = Date.now(); 
             }
             timerInterval = setInterval(updateGameTimer, 1000);
             updateGameTimer(); // Initial update
@@ -906,68 +1182,100 @@
             return { x, y, tileSize };
         }
 
-        function renderBoard(newTileCoords = null) {
-            // Remove existing tiles
-            const existingTiles = gameBoardElement.querySelectorAll('.tile');
-            existingTiles.forEach(tile => tile.remove());
+        // NEW: Refactored rendering function for smoother animations
+        function animateAndRenderTiles(animationInstructions = { newTiles: [], mergedTiles: [] }) {
+            const existingTileElements = new Map(); // Map tile ID to its DOM element
+            
+            // First, collect all currently rendered tiles
+            gameBoardElement.querySelectorAll('.tile').forEach(el => {
+                const id = parseInt(el.dataset.id);
+                if (!isNaN(id)) {
+                    existingTileElements.set(id, el);
+                }
+            });
 
-            // Clear previous placeholder and redraw
-            gameBoardElement.innerHTML = '';
-            for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-                const placeholder = document.createElement('div');
-                placeholder.classList.add('tile-placeholder');
-                gameBoardElement.appendChild(placeholder);
-            }
+            const tilesInNextState = new Set(); // Keep track of tiles that should exist in the new state
 
-            // Add new tiles
+            // Iterate through the logical board to update/create tiles
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    const value = board[r][c];
-                    if (value !== 0) {
-                        const tileElement = document.createElement('div');
-                        tileElement.classList.add('tile');
-                        tileElement.dataset.value = value;
-                        tileElement.dataset.row = r; // Store row for new tile identification
-                        tileElement.dataset.col = c; // Store col for new tile identification
-                        tileElement.textContent = value;
-                        tileElement.style.zIndex = '1';
+                    const tileObject = board[r][c]; // { value, id } or 0
+                    
+                    if (tileObject !== 0) {
+                        const { value, id } = tileObject;
+                        tilesInNextState.add(id);
 
-                        // Apply tile value specific class for styling
-                        if (value <= 2048) {
-                            tileElement.classList.add(`tile-${value}`);
-                        } else {
-                            tileElement.classList.add('tile-super'); // For values > 2048
+                        let tileElement = existingTileElements.get(id);
+
+                        if (!tileElement) {
+                            // This tile is brand new (or was merged into a new spot)
+                            tileElement = document.createElement('div');
+                            tileElement.classList.add('tile');
+                            tileElement.dataset.id = id;
+                            gameBoardElement.appendChild(tileElement); // Add to DOM
+                            existingTileElements.set(id, tileElement); // Add to our map
                         }
 
-                        // Set position
+                        // Update common properties and position
+                        tileElement.dataset.value = value;
+                        tileElement.textContent = value;
+                        
                         const { x, y, tileSize } = getTilePosition(r, c);
                         tileElement.style.left = `${x}px`;
                         tileElement.style.top = `${y}px`;
                         tileElement.style.width = `${tileSize}px`;
                         tileElement.style.height = `${tileSize}px`;
 
-                        gameBoardElement.appendChild(tileElement);
+                        // Update classes based on value
+                        tileElement.className = 'tile'; // Reset to base class
+                        if (value <= 2048) {
+                            tileElement.classList.add(`tile-${value}`);
+                        } else {
+                            tileElement.classList.add('tile-super');
+                        }
                     }
                 }
             }
-            
-            // If newTileCoords is provided, find that specific tile and add 'tile-new' class
-            if (newTileCoords) {
-                const newTileElement = gameBoardElement.querySelector(
-                    `.tile[data-row="${newTileCoords.r}"][data-col="${newTileCoords.c}"][data-value="${newTileCoords.value}"]`
-                );
-                if (newTileElement) {
-                    newTileElement.classList.add('tile-new');
-                    // Remove the class after the animation duration to allow subsequent transitions
-                    setTimeout(() => newTileElement.classList.remove('tile-new'), 300); // Match animation duration
+
+            // Apply animation classes based on instructions for new tiles
+            animationInstructions.newTiles.forEach(newTile => {
+                const tileElement = existingTileElements.get(newTile.id);
+                if (tileElement) {
+                    tileElement.classList.add('tile-new');
+                    setTimeout(() => tileElement.classList.remove('tile-new'), 300); // Remove class after animation
                 }
-            }
+            });
+
+            // Handle merged tiles: apply 'tile-merged' animation
+            animationInstructions.mergedTiles.forEach(mergedTile => {
+                const tileElement = existingTileElements.get(mergedTile.targetId);
+                if (tileElement) {
+                    tileElement.classList.add('tile-merged');
+                    playSound(mergeSound); // Play merge sound
+                    setTimeout(() => tileElement.classList.remove('tile-merged'), 300);
+                }
+            });
+            
+            // Remove tiles that are no longer in the board (e.g., merged away or became 0)
+            existingTileElements.forEach((el, id) => {
+                if (!tilesInNextState.has(id)) {
+                    // Immediately set z-index lower to ensure it's behind any active tiles
+                    // then remove after a short delay, allowing merge animation on target to proceed.
+                    el.style.zIndex = 0; // Ensure disappearing tile is behind others during the removal delay
+                    setTimeout(() => el.remove(), 150); // Remove half-way through the merge animation
+                }
+            });
+
+            // The tile-placeholders are static and defined in HTML, they should not be manipulated by JS.
+            // Dynamic '.tile' elements are positioned absolutely over these placeholders,
+            // and their creation, update, and removal are handled in the preceding logic.
+            // This section is therefore redundant and counterproductive.
         }
 
         // --- Game Logic ---
 
         function initializeGame() {
-            board = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
+            board = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0)); // Initialize with 0 objects
             score = 0;
             movesCount = 0; // New: Reset moves count
             gameStartTime = 0; // New: Reset game start time
@@ -977,36 +1285,34 @@
             messageTextElement.textContent = '';
             tryAgainButton.textContent = 'Keep Playing';
             undoStack = []; // Clear undo stack for a new game
+            nextTileId = 0; // NEW: Reset tile ID counter for a new game
 
             updateScore(0); // Reset score display
             updateMovesCount(0); // Reset moves display
             loadBestScore();
             stopTimer(); // Ensure timer is stopped before starting a new one
             startTimer(); // New: Start the game timer
-            
+            playSound(buttonSound); // NEW: Play sound on new game
+
+            // Clear existing tiles from previous game visual
+            gameBoardElement.querySelectorAll('.tile').forEach(tile => tile.remove());
+
             const firstTile = addRandomTile();
             const secondTile = addRandomTile();
-            // Pass new tile coordinates to renderBoard for animation
-            renderBoard(); 
-            // Apply new animations after initial render
-            if (firstTile) {
-                const tileElement = gameBoardElement.querySelector(`.tile[data-row="${firstTile.r}"][data-col="${firstTile.c}"][data-value="${firstTile.value}"]`);
-                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 300); }
-            }
-            if (secondTile) {
-                const tileElement = gameBoardElement.querySelector(`.tile[data-row="${secondTile.r}"][data-col="${secondTile.c}"][data-value="${secondTile.value}"]`);
-                if (tileElement) { tileElement.classList.add('tile-new'); setTimeout(() => tileElement.classList.remove('tile-new'), 300); }
-            }
+            
+            // NEW: Render initial board with new tile animations
+            animateAndRenderTiles({ newTiles: [firstTile, secondTile], mergedTiles: [] });
 
             updateUndoButtonState(); // Update undo button state after init
             saveGame(); // Save initial state
         }
 
+        // Modified addRandomTile to return an object with an ID
         function addRandomTile() {
             const emptyCells = [];
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === 0) {
+                    if (board[r][c] === 0) { // Check for 0 (empty)
                         emptyCells.push({ r, c });
                     }
                 }
@@ -1015,78 +1321,119 @@
             if (emptyCells.length > 0) {
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
                 const { r, c } = emptyCells[randomIndex];
-                board[r][c] = Math.random() < 0.9 ? 2 : 4; // 90% chance of 2, 10% chance of 4
-                return { r, c, value: board[r][c] }; // Return new tile info
+                const value = Math.random() < 0.9 ? 2 : 4;
+                const id = nextTileId++; // Assign unique ID
+                board[r][c] = { value, id }; // Store tile object in board
+                return { r, c, value, id }; // Return tile info including ID
             }
             return null;
         }
 
-        function getColumn(c) {
-            return Array(BOARD_SIZE).fill(0).map((_, r) => board[r][c]);
+        // Modified getColumn to return tile objects
+        function getColumn(c, sourceBoard = board) {
+            return Array(BOARD_SIZE).fill(0).map((_, r) => sourceBoard[r][c]);
         }
 
-        function setColumn(c, newCol) {
+        // Modified setColumn to take a target board
+        function setColumn(c, newCol, targetBoard = board) {
             for (let r = 0; r < BOARD_SIZE; r++) {
-                board[r][c] = newCol[r];
+                targetBoard[r][c] = newCol[r];
             }
         }
 
+        // Modified slideAndMerge to return instructions for animation
+        // Also needs to take a `line` of tile objects {value, id} or 0
         function slideAndMerge(line) {
             let moved = false;
             let mergedPoints = 0;
+            let mergeInstructions = []; // { sourceId, targetId, value } for animation
 
-            // 1. Filter out zeros and compress
-            const filteredLine = line.filter(val => val !== 0);
+            // 1. Filter out zeros and compress, keep IDs
+            const filteredLine = line.filter(tile => tile !== 0);
 
             // 2. Merge tiles
-            let newLine = Array(BOARD_SIZE).fill(0);
             let k = 0;
+            let currentLine = []; // This will be the new state of the line
+            let usedSourceIds = new Set(); // To mark tiles that were merged *into* another
+            
             for (let i = 0; i < filteredLine.length; i++) {
-                if (i + 1 < filteredLine.length && filteredLine[i] === filteredLine[i + 1]) {
-                    const mergedValue = filteredLine[i] * 2;
-                    newLine[k] = mergedValue;
+                const currentTile = filteredLine[i];
+                if (i + 1 < filteredLine.length && filteredLine[i].value === filteredLine[i + 1].value && !usedSourceIds.has(currentTile.id)) {
+                    const mergedValue = currentTile.value * 2;
+                    const targetTileId = filteredLine[i+1].id; // Keep the ID of the right-most tile for merge target
+                    
+                    currentLine[k] = { value: mergedValue, id: targetTileId }; // Use target tile's ID for merged tile
                     mergedPoints += mergedValue;
+                    usedSourceIds.add(filteredLine[i].id); // Mark the source tile as used/merged away
+                    mergeInstructions.push({
+                        sourceId: filteredLine[i].id,
+                        targetId: targetTileId,
+                        value: mergedValue // The value the target tile will become
+                    });
                     i++; // Skip the next tile as it's merged
-                    moved = true; // A merge implies a move
-                } else {
-                    newLine[k] = filteredLine[i];
+                    moved = true;
+                } else if (!usedSourceIds.has(currentTile.id)) {
+                    currentLine[k] = { ...currentTile }; // Copy the tile object
                 }
                 k++;
             }
-            
-            // 3. Check for moves without merges (if numbers simply shifted positions)
+
+            // Fill remaining spots with zeros
+            while (currentLine.length < BOARD_SIZE) {
+                currentLine.push(0);
+            }
+
+            // Check if tiles actually moved positions or values changed
             if (!moved) {
                 for (let i = 0; i < line.length; i++) {
-                    if (line[i] !== newLine[i]) {
-                        moved = true;
+                    // Compare previous state of the line to the new state
+                    const prevTile = line[i];
+                    const currTile = currentLine[i];
+
+                    if (prevTile === 0 && currTile !== 0) {
+                        moved = true; // A tile moved into an empty spot
                         break;
+                    }
+                    if (prevTile !== 0 && currTile === 0) {
+                        moved = true; // A tile moved out of a spot
+                        break;
+                    }
+                    if (prevTile !== 0 && currTile !== 0) {
+                        if (prevTile.id !== currTile.id || prevTile.value !== currTile.value) {
+                             moved = true; // Different tile or value changed
+                             break;
+                        }
                     }
                 }
             }
 
-            return { newLine, moved, mergedPoints };
+            return { newLine: currentLine, moved, mergedPoints, mergeInstructions };
         }
 
 
+        // Refactored moveTiles to use animateAndRenderTiles
         function moveTiles(direction) {
-            // Block moves if game is over, or if game is won AND the "You Win!" message is visible
             if (isGameOver || (isGameWon && !isGameOver && !gameMessageElement.classList.contains('hidden'))) {
                 return;
             }
 
-            // Save current state BEFORE making a move
-            pushToUndoStack();
-
+            pushToUndoStack(); // Save current state before potential modification
+            
             let hasMoved = false;
             let totalMergedPoints = 0;
-            // const oldBoard = JSON.parse(JSON.stringify(board)); // No longer needed directly for move detection if slideAndMerge returns 'moved'
+            let newTileToAdd = null;
+            let allMergeInstructions = []; // Collect merge instructions from all lines
 
+            // Create a temporary 'next' board and apply changes
+            let tempBoard = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
+
+            // For each row/column, apply slideAndMerge
             for (let i = 0; i < BOARD_SIZE; i++) {
-                let line;
+                let line; // Current line of tile objects
 
                 switch (direction) {
                     case 'left':
-                        line = board[i];
+                        line = board[i].slice(); // Take a copy of the row
                         break;
                     case 'right':
                         line = board[i].slice().reverse();
@@ -1099,44 +1446,69 @@
                         break;
                 }
 
-                const { newLine, moved, mergedPoints } = slideAndMerge(line);
+                const { newLine, moved, mergedPoints, mergeInstructions } = slideAndMerge(line);
 
                 if (moved) {
                     hasMoved = true;
                     totalMergedPoints += mergedPoints;
+                    allMergeInstructions = allMergeInstructions.concat(mergeInstructions);
 
-                    // Update board
+                    // Update tempBoard with newLine
                     switch (direction) {
                         case 'left':
-                            board[i] = newLine;
+                            tempBoard[i] = newLine;
                             break;
                         case 'right':
-                            board[i] = newLine.slice().reverse();
+                            tempBoard[i] = newLine.slice().reverse();
                             break;
                         case 'up':
-                            setColumn(i, newLine);
+                            setColumn(i, newLine, tempBoard); // Modified setColumn to update tempBoard
                             break;
                         case 'down':
-                            setColumn(i, newLine.slice().reverse());
+                            setColumn(i, newLine.slice().reverse(), tempBoard);
+                            break;
+                    }
+                    // Sound for moves will be played after all animations.
+                } else {
+                    // If line didn't move, just copy original to tempBoard for that line
+                     switch (direction) {
+                        case 'left':
+                            tempBoard[i] = board[i].slice();
+                            break;
+                        case 'right':
+                            tempBoard[i] = board[i].slice(); 
+                            break;
+                        case 'up':
+                            for(let r=0; r<BOARD_SIZE; r++) tempBoard[r][i] = board[r][i];
+                            break;
+                        case 'down':
+                            for(let r=0; r<BOARD_SIZE; r++) tempBoard[r][i] = board[r][i];
                             break;
                     }
                 }
             }
 
+            // If any tiles actually moved or merged
             if (hasMoved) {
+                board = tempBoard; // Update the main game board
                 updateScore(totalMergedPoints);
-                updateMovesCount(); // New: Increment moves count
-                const newTile = addRandomTile();
+                updateMovesCount();
+                newTileToAdd = addRandomTile(); // This updates 'board' with the new tile
+                playSound(moveSound); // Play move sound AFTER determining a move occurred
                 
-                // Trigger re-render after a short delay to allow CSS transitions to play out
+                // Use animateAndRenderTiles with the collected animation info
+                animateAndRenderTiles({
+                    newTiles: newTileToAdd ? [newTileToAdd] : [],
+                    mergedTiles: allMergeInstructions
+                });
+
+                // Check game status and save after animations
                 setTimeout(() => {
-                    renderBoard(newTile); // Render the board and apply 'tile-new' to the new tile
-                    // Check game status and save after animations
                     checkGameStatus();
                     saveGame();
-                }, 300); // Match CSS transition duration for position changes for smoother feel
+                }, 300); // Small delay to allow initial move animations to start
             } else {
-                // If no tiles moved, pop the last state from undo stack as no valid move occurred
+                // No tiles moved, so revert the undo stack push
                 undoStack.pop();
                 updateUndoButtonState();
                 saveGame();
@@ -1144,6 +1516,7 @@
             }
         }
 
+        // Modified isMovePossible to consider tile objects
         function isMovePossible() {
             // Check for empty cells
             for (let r = 0; r < BOARD_SIZE; r++) {
@@ -1155,27 +1528,29 @@
             // Check for possible merges horizontally and vertically
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    const value = board[r][c];
-                    if (value === 0) continue;
+                    const tile = board[r][c];
+                    if (tile === 0) continue;
 
                     // Check right
-                    if (c + 1 < BOARD_SIZE && board[r][c + 1] === value) return true;
+                    if (c + 1 < BOARD_SIZE && board[r][c + 1] !== 0 && board[r][c + 1].value === tile.value) return true;
                     // Check down
-                    if (r + 1 < BOARD_SIZE && board[r + 1][c] === value) return true;
+                    if (r + 1 < BOARD_SIZE && board[r + 1][c] !== 0 && board[r + 1][c].value === tile.value) return true;
                 }
             }
             return false;
         }
 
+        // Modified checkGameStatus for win/lose sounds
         function checkGameStatus() {
             if (!isGameWon) {
                 for (let r = 0; r < BOARD_SIZE; r++) {
                     for (let c = 0; c < BOARD_SIZE; c++) {
-                        if (board[r][c] === 2048) {
+                        if (board[r][c] !== 0 && board[r][c].value === 2048) {
                             isGameWon = true;
                             showMessage('You Win!');
                             tryAgainButton.textContent = 'Keep Playing'; // Allow continuing after win
                             stopTimer();
+                            playSound(winSound); // NEW: Play win sound
                             saveGame();
                             return;
                         }
@@ -1188,6 +1563,7 @@
                 showMessage('Game Over!');
                 tryAgainButton.textContent = 'Try Again';
                 stopTimer();
+                playSound(loseSound); // NEW: Play lose sound
                 saveGame();
                 updateUndoButtonState(); // Disable undo button if game over
             }
@@ -1279,10 +1655,10 @@
 
         restartButton.addEventListener('click', initializeGame);
         undoButton.addEventListener('click', undoMove); // Add event listener for undo button
-        settingsButton.addEventListener('click', () => { // New: Placeholder for settings button
-            alert('Settings button clicked! (No settings implemented yet)');
-            // Here you would typically open a settings modal or panel
-        });
+        // settingsButton.addEventListener('click', () => { // Now handled by openSettingsModal directly
+        //     alert('Settings button clicked! (No settings implemented yet)');
+        //     // Here you would typically open a settings modal or panel
+        // });
         tryAgainButton.addEventListener('click', () => {
             if (isGameOver) {
                 initializeGame(); // Start new game if game over
@@ -1320,6 +1696,7 @@
 
         themeButtons.forEach(button => {
             button.addEventListener('click', () => {
+                playSound(buttonSound); // NEW: Play sound on theme change
                 applyTheme(button.dataset.theme);
             });
         });
@@ -1329,6 +1706,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadThemePreference();
             loadBestScore();
+            // NEW: Load global volume preference
+            const savedVolume = localStorage.getItem('2048Volume');
+            globalVolume = savedVolume ? parseFloat(savedVolume) : 1.0;
+            applyGlobalVolume(); // Apply the loaded volume to all audio elements
+
             if (!loadGame()) {
                 initializeGame(); // If no saved game, start a new one
             } else {
@@ -1342,6 +1724,7 @@
                 updateMovesCount(0); // Display correct moves immediately on load (without incrementing)
             }
             updateUndoButtonState(); // Ensure button state is correct after initial load
+            updateMuteButtonUI(); // Ensure mute button reflects saved preference on load
         });
     </script>
 </body>
